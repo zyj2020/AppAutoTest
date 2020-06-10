@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>新增测试用例</title>
+    <link href="/static/css/bootstrap.css" rel="stylesheet"/>
+    <script type="text/javascript" src="/static/js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/static/js/bootstrap.js"></script>
+    <style type="text/css">
+        span {
+            cursor: pointer;
+            vertical-align: middle;
+            display: inline-block;
+            font-size: 30px;
+            font-weight: 700;
+            margin-left: 10px;
+            line-height: 20px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, .1);
+            -o-transform: rotate(45deg);
+            -moz-transform: rotate(45deg);
+            -webkit-transform: rotate(45deg);
+            -ms-transform: rotate(45deg);
+        }
+
+        .jsonValue, .assertJsonType {
+            margin-left: 5px
+        }
+    </style>
+    <script>
+        $(function () {
+            {% if caseInfo %}
+                $('#apiGroup').val({{ caseInfo.groupApiId }});
+                $('#caseName').val('{{ caseInfo.caseName }}');
+                $('#caseEnv').val({{ caseInfo.caseEnv }});
+                $('#caseLevel').val({{ caseInfo.caseLevel }});
+                {#$('#caseBody').val({{ caseInfo.caseBody|safe }});#}
+                {% if caseInfo.caseFlg %}
+                    $("#caseFlg").val(1);
+                {% else %}
+                    $("#caseFlg").val(0);
+                {% endif %}
+                let assert = {{ caseInfo.excRule|safe }};   // | safe  防止被转义
+                if (assert['assertType'] == 'text') {
+                    $("input.assertType[value='text']").attr("checked", true);
+                    $(".assertTextForm").show();
+                    $(".assertJsonForm").hide();
+                    let subType = assert.assertValue.assertTextType;
+                    $("input.assertTypeText[value=" + subType + "]").attr("checked", true);
+                    $("#inputResp").val(assert.assertValue.assertText)
+                } else if (assert['assertType'] == 'json') {
+                    $("input.assertType[value='json']").attr("checked", true);
+                    $(".assertTextForm").hide();
+                    $(".assertJsonForm").show();
+                    let dataList = assert.assertValue;
+                    if (dataList.length > 0) {
+                        $(".jsonKey").val(dataList[0].dataKey);
+                        $(".assertJsonType").find("option[value=" + dataList[0].method + "]").attr("selected", true);
+                        $(".jsonValue").val(dataList[0].dataValue);
+                        if (dataList.length > 1) {
+                            for (let i = 1; i < dataList.length; i++) {
+                                let rows = "<div style=\"margin-top: 10px\"><input type=\"text\" class=\"jsonKey\" placeholder=\"字段名称\"" +
+                                    " value='" + dataList[i].dataKey + "'>" +
+                                    "<select class=\"assertJsonType\">" +
+                                    "<option value=\"1\"" + (dataList[i].method == 1 ? "selected" : "") + ">等于</option>" +
+                                    "<option value=\"2\"" + (dataList[i].method == 2 ? "selected" : "") + ">不等于</option>" +
+                                    "<option value=\"3\"" + (dataList[i].method == 3 ? "selected" : "") + ">包含</option>" +
+                                    "<option value=\"4\"" + (dataList[i].method == 4 ? "selected" : "") + ">大于</option>" +
+                                    "<option value=\"5\"" + (dataList[i].method == 5 ? "selected" : "") + ">小于</option>" +
+                                    "<option value=\"6\"" + (dataList[i].method == 6 ? "selected" : "") + ">为真</option>" +
+                                    "<option value=\"7\"" + (dataList[i].method == 7 ? "selected" : "") + ">为假</option>" +
+                                    "<option value=\"8\"" + (dataList[i].method == 8 ? "selected" : "") + ">不包含</option>" +
+                                    "<option value=\"9\"" + (dataList[i].method == 9 ? "selected" : "") + ">值相等</option>" +
+                                    "</select>" +
+                                    "<input type=\"text\" class=\"jsonValue\" placeholder=\"期望值\" value='" + dataList[i].dataValue + "'>" +
+                                    "<span onclick='delRow(this)'>+</span> </div>";
+                                $(".assertJsonForm").append(rows);
+                                $('.jsonKey').off("change");
+                                bindChange();
+                            }
+                        }
+                    }
+                }
+            {% endif %}
+        });
+
+        function changeApi(_id) {
+            $.get("/caseList/{{ project }}/queryApiList?id=" + _id, function (res) {
+                let defaultId = 0;
+                {% if caseInfo %}
+                    defaultId = {{ caseInfo.apiId.id }};
+                {% endif %}
+                $("#api").html(""); //清空api下拉列表
+                for (let i = 0; i < res.length; i++) {
+                    let defaultFlag = defaultId == res[i].id ? 'selected="selected"' : '';
+                    $("#api").append("<option value='" + res[i].id + "'" + defaultFlag + ">" + res[i].apiName + "</option>")
+                }
+            }, 'json');
+        }
+
+        $(function () {
+            changeApi($("#apiGroup").val());
+            $("#apiGroup").change(function () {
+                changeApi($(this).val())
+            })
+        });
+    </script>
+</head>
+<body>
+<div style="margin-top: 25px">
+    <form class="form-horizontal" method="POST" id="caseFrom">
+        <div class="control-group">
+            <label class="control-label" for="apiGroup">所属接口组</label>
+            <div class="controls">
+                <select id="apiGroup" name="apiGroup">
+                    {% for group in groups %}
+                        <option value="{{ group.id }}">{{ group.groupName }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="api">接口</label>
+            <div class="controls">
+                <select id="api" name="api"></select>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="caseName">用例名称</label>
+            <div class="controls">
+                <input type="text" name="caseName" id="caseName" placeholder="用例名称" required="true">
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="caseEnv">测试环境</label>
+            <div class="controls">
+                <select id="caseEnv" name="caseEnv">
+                    <option value="2">测试地址</option>
+                    <option value="1">本地地址</option>
+                    <option value="3">预发地址</option>
+                    <option value="4">正式地址</option>
+                </select>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="caseLevel">用例等级</label>
+            <div class="controls">
+                <select id="caseLevel" name="caseLevel">
+                    <option value="2">一般用例</option>
+                    <option value="3">核心用例</option>
+                    <option value="1">次要用例</option>
+                </select>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="caseBody">请求Body</label>
+            <div class="controls">
+                <textarea type="text" name="caseBody" id="caseBody" placeholder="请求Body" rows="5"
+                          style="width: 75%">{% if caseInfo  %}{{ caseInfo.caseBody|safe }}{% endif %}</textarea>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="excRule">响应断言</label>
+            <div class="controls">
+                <label class="radio inline">
+                    <input type="radio" name="assertType" class="assertType" value="text">
+                    响应文本比较
+                </label>
+                <label class="radio inline">
+                    <input type="radio" name="assertType" class="assertType" value="json">
+                    Json字段比较
+                </label>
+                <div>
+                    <div class="assertTextForm" style="display:none">
+                        <div>
+                            <label class="radio inline">
+                                <input type="radio" class="assertTypeText" name="assertTypeText" value="1">
+                                包括
+                            </label>
+                            <label class="radio inline">
+                                <input type="radio" class="assertTypeText" name="assertTypeText" value="2">
+                                匹配
+                            </label>
+                            <label class="radio inline">
+                                <input type="radio" class="assertTypeText" name="assertTypeText" value="3">
+                                Substring
+                            </label>
+                            <label class="radio inline">
+                                <input type="radio" class="assertTypeText" name="assertTypeText" value="4">
+                                Equals
+                            </label>
+                        </div>
+                        <div style="margin-top: 10px">
+                            <textarea type="text" name="inputResp" id="inputResp" placeholder="断言文本" rows="4"
+                                      style="width: 75%"></textarea>
+                        </div>
+                    </div>
+                    <div class="assertJsonForm" style="display:none">
+                        <div style="margin-top: 10px">
+                            <input type="text" class="jsonKey" placeholder="字段名称">
+                            <select class="assertJsonType">
+                                <option value="1">等于</option>
+                                <option value="2">不等于</option>
+                                <option value="3">包含</option>
+                                <option value="4">大于</option>
+                                <option value="5">小于</option>
+                                <option value="6">为真</option>
+                                <option value="7">为假</option>
+                                <option value="8">不包含</option>
+                                <option value="9">值相等</option>
+                            </select>
+                            <input type="text" class="jsonValue" placeholder="期望值">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="caseFlg">状态</label>
+            <div class="controls">
+                <select id="caseFlg" name="caseFlg">
+                    <option value="1">有效</option>
+                    <option value="0">无效</option>
+                </select>
+            </div>
+        </div>
+        <div class="control-group" align="center">
+            <button class="btn btn-info" type="button" onclick="submitForm()">提 交</button>
+        </div>
+    </form>
+</div>
+<script>
+    function submitForm() {
+        //断言参数拼装
+        let assert = JSON.stringify({});
+        let assertType = $('input.assertType:radio:checked').val();
+        if (assertType == "text") {
+            let assertTypeText = $('input.assertTypeText:radio:checked').val();
+            if (assertTypeText == undefined) {
+                alert('请选择文本比较类型');
+                return false
+            }
+            let assertText = $('#inputResp').val();
+            if (assertText == "") {
+                alert('请输入比较文本');
+                return false
+            }
+            let assertValue = {
+                assertTextType: assertTypeText,
+                assertText: assertText
+            };
+            assert = {
+                assertType: assertType,
+                assertValue: assertValue
+            };
+        } else if (assertType == "json") {
+            let dicArray = new Array();
+            $(".jsonKey").each(function () {
+                if ($(this).val() != "") {
+                    let dic = {
+                        dataKey: $(this).val(),
+                        method: $(this).parent().children('.assertJsonType').val(),
+                        dataValue: $(this).parent().children('.jsonValue').val()
+                    };
+                    dicArray.push(dic);
+                }
+            });
+            if (dicArray.length <= 0) {
+                alert('请至少输入一个断言字段名称');
+                return false
+            }
+            assert = {
+                assertType: assertType,
+                assertValue: dicArray
+            };
+        } else {
+            alert('请选择响应断言');
+            return false
+        }
+        $.ajax({
+            url: "/caseList/{{project}}/caseDetail/save",
+            type: 'POST',
+            data: JSON.stringify({
+                id:{{ caseId }},
+                groupApiId: $('#apiGroup').val(),
+                apiId: $('#api').val(),
+                caseName: $('#caseName').val(),
+                caseLevel: $('#caseLevel').val(),
+                caseBody: $('#caseBody').val(),
+                excRule: JSON.stringify(assert),
+                caseFlg: $('#caseFlg').val(),
+                caseEnv: $('#caseEnv').val(),
+                creator: '{{ user }}'
+            }),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+                alert(data['code']);
+                let index = parent.layer.getFrameIndex(window.name);
+                parent.layer.close(index);
+            }
+        });
+    }
+
+    function delRow(ele) {
+        $(ele).parent().remove();
+    }
+
+    let bindChange = function () {
+        $('.jsonKey').on("change", function () {
+            let isAdd = true;
+            $(".jsonKey").each(function () {
+                if ($(this).val() == "") {
+                    isAdd = false;
+                    return false
+                }
+            });
+            if (isAdd) {
+                let rows = "<div style=\"margin-top: 10px\"><input type=\"text\" class=\"jsonKey\" placeholder=\"字段名称\">" +
+                    "<select class=\"assertJsonType\">" +
+                    "<option value=\"1\">等于</option>" +
+                    "<option value=\"2\">不等于</option>" +
+                    "<option value=\"3\">包含</option>" +
+                    "<option value=\"4\">大于</option>" +
+                    "<option value=\"5\">小于</option>" +
+                    "<option value=\"6\">为真</option>" +
+                    "<option value=\"7\">为假</option>" +
+                    "<option value=\"8\">不包含</option>" +
+                    "<option value=\"9\">值相等</option>" +
+                    "</select>" +
+                    "<input type=\"text\" class=\"jsonValue\" placeholder=\"期望值\">" +
+                    "<span onclick='delRow(this)'>+</span> </div>";
+                $(".assertJsonForm").append(rows);
+                $('.jsonKey').off("change");
+                bindChange();
+            }
+        })
+    };
+    $(function () {
+        $('[name=assertType]').change(function () {
+            if ($('input.assertType:radio:checked').val() == "text") {
+                $(".assertTextForm").show();
+                $(".assertJsonForm").hide();
+            } else if ($('input.assertType:radio:checked').val() == "json") {
+                $(".assertTextForm").hide();
+                $(".assertJsonForm").show();
+            }
+        });
+        bindChange();
+    });
+</script>
+</body>
+</html>

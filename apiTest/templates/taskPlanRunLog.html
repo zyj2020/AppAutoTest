@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="/static/css/bootstrap.css" rel="stylesheet"/>
+    <script type="text/javascript" src="/static/js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="/static/js/bootstrap-confirm.js"></script>
+    <script type="text/javascript" src="/static/js/layer.js"></script>
+    <style>
+        .wrap {
+            width: 380px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <table class="table table-striped table-hover table-bordered" style="width: 96%;margin-left: 2%;margin-top: 10px">
+        <col width="10%">
+        <col width="40%">
+        <col width="10%">
+        <col width="10%">
+        <col width="10%">
+        <col width="20%">
+        <thead>
+            <tr>
+                <th>编号</th>
+                <th>结果日志</th>
+                <th>运行总数</th>
+                <th>通过数</th>
+                <th>失败数</th>
+                <th>运行时间</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.id }}</td>
+                <td><div class="wrap" title="{{ log.result }}">{{ log.result }}</div></td>
+                <td>{{ log.runCaseNum }}</td>
+                <td>{{ log.passNum }}</td>
+                <td onclick="getFailList({{ log.id }})">{{ log.failNum }}</td>
+                <td>{{ log.runTime }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+<script>
+    function getFailList(logId) {
+        layer.open({
+            type: 2,
+            title:'失败列表',
+            area: ['1200px', '540px'],
+            shadeClose: false, //点击遮罩关闭
+            content:'/caseList/{{project}}/runLog?taskLogId=' + logId
+        });
+    }
+</script>
+</body>
+</html>

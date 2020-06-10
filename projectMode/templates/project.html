@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>项目维护</title>
+    <script type="text/javascript" src="/static/js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="/static/js/layer.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/static/js/publicFun.js"></script>
+    <script>
+        $(function f() {
+            let projectName = getParam("projectName");
+            let proId = getParam("productId");
+            let projectFlag = getParam("projectFlag");
+            $('#projectName').val(projectName);
+            $('#productId').val(proId);
+            $('#projectFlag').val(projectFlag);
+        });
+    </script>
+</head>
+<body>
+{% include "top.html" %}
+<div style="width: 90%;margin-left: 5%;margin-top: 30px">
+    <div>
+        <form class="form-inline" id="queryProject" method="get" action="/queryProject/">
+            <label class="control-label" for="projectName">名称:</label>
+            <input id="projectName" name="projectName" type="text" class="input-small" placeholder="名称"
+                   style="width: 15%">
+            <label class="control-label" for="projectFlag" style="margin-left: 15px">是否有效:</label>
+            <select id="projectFlag" name="projectFlag">
+                <option value="">---请选择---</option>
+                <option value="1">有效</option>
+                <option value="0">无效</option>
+            </select>
+            <label class="control-label" for="productId" style="margin-left: 15px">所属产品</label>
+            <select id="productId" name="productId">
+                <option value="">---请选择---</option>
+                {% for pro in products %}
+                    <option value="{{ pro.id }}">{{ pro.productName }}</option>
+                {% endfor %}
+            </select>
+            <button class="btn btn-success" type="submit" style="margin-left: 25px">查询</button>
+            <button class="btn btn-info" type="button" id="addProject" style="margin-left: 25px">新增项目</button>
+        </form>
+    </div>
+</div>
+<div style="margin-top: 15px">
+    <table class="table table-striped table-hover table-bordered" style="width: 90%;margin-left: 5%" id="product-list">
+        <col width="10%">
+        <col width="20%">
+        <col width="20%">
+        <col width="15%">
+        <col width="15%">
+        <col width="10%">
+        <col width="10%">
+        {#        <col width="10%">#}
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>项目名称</th>
+            <th>所属产品</th>
+            <th>所属模块</th>
+            <th>项目标识</th>
+            <th>状态</th>
+            <th>编辑</th>
+            {#            <th>删除</th>#}
+        </tr>
+        </thead>
+        <tbody>
+        {% for project in projects %}
+            <tr>
+                <td>{{ project.id }}</td>
+                <td>{{ project.projectName }}</td>
+                <td>{{ project.productId }}</td>
+                <td>{{ project.module }}</td>
+                <td>{{ project.projectTag }}</td>
+                <td>{% if project.projectFlag == 1 %}有效{% else %}无效{% endif %}</td>
+                <td>
+                    <a onclick="_open({{ project.id }})">编辑</a>
+                    {#                    <a class="related-widget-wrapper-link add-related" id="deleteProduct"#}
+                    {#                       href="../admin/projectMode/projectmode/{{ project.id }}/change/?_to_field=id&_popup=1">编辑</a>#}
+                </td>
+                {#                <td>#}
+                {#                    <a class="related-widget-wrapper-link add-related" id="deleteProduct"#}
+                {#                       href="../admin/projectMode/projectmode/{{ project.id }}/delete/?_to_field=id&_popup=1">删除</a>#}
+                {#                </td>#}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    $('#addProject').on('click', function () {
+        layer.open({
+            type: 2,
+            title: '新增项目',
+            area: ['860px', '550px'],
+            shadeClose: false, //点击遮罩关闭
+            content: "../admin/projectMode/projectmode/add/?_to_field=id&amp;_popup=1",
+            end: function () {
+                location.reload();
+            }
+        });
+    });
+
+    function _open(_Id) {
+        layer.open({
+            type: 2,
+            title: '编辑接口组',
+            area: ['860px', '550px'],
+            shadeClose: false, //点击遮罩关闭
+            content: '../admin/projectMode/projectmode/' + _Id + '/change/?_to_field=id&_popup=1',
+            end: function () {
+                location.reload();
+            }
+        });
+    }
+</script>
+</body>
+</html>

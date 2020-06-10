@@ -1,0 +1,29 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>测试平台</title>
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/static/css/bootstrap-responsive.css"/>
+    <style> body {
+        text-align: center
+    } </style>
+</head>
+<body>
+<div>
+
+    <h1>测试平台</h1>
+
+    <form method="post" action="/login/?next={{ next }}">
+        {% csrf_token %}
+        <br><label>&nbsp;&nbsp;用户名：</label> <input class="input-sm" name="username" type="text">
+        <!--placeholder="test"   value="test"-->
+        <br><br> <label>&nbsp;&nbsp;密 &nbsp;&nbsp; 码：</label> <input class="input-sm" name="password" type="password">
+        <!-- placeholder="test123456" value="test123456"-->
+        <br>{{ error }}<br>
+        &nbsp;
+        <button class="btn btn-info" style="width:230px;height:32px;" id="submit" type="submit">登 录</button>
+    </form>
+</div>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ project }}任务计划</title>
+    <link href="/static/css/bootstrap.css" rel="stylesheet"/>
+    <link href="/static/css/jquery-confirm.css" rel="stylesheet">
+    <script type="text/javascript" src="/static/js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="/static/js/bootstrap-confirm.js"></script>
+    <script type="text/javascript" src="/static/js/layer.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/static/js/publicFun.js"></script>
+    <script>
+        $(function f() {
+            let taskPlanName = getParam("taskPlanName");
+            let taskPlanFlg = getParam("taskPlanFlg");
+            $('#taskPlanName').val(taskPlanName);
+            $('#taskPlanFlg').val(taskPlanFlg);
+        });
+    </script>
+    <style>
+        table tbody tr td a {
+            margin-left: 15px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+{% include "top.html" %}
+{% include "header.html" %}
+<div style="width: 90%;margin-left: 5%;margin-top: 30px">
+    <div>
+        <form class="form-inline" id="queryTaskPlan" method="get" action="/caseList/{{ project }}/taskList/query">
+            <label class="control-label" for="taskPlanName">计划名称:</label>
+            <input id="taskPlanName" name="taskPlanName" type="text" class="input-small" placeholder="计划名称"
+                   style="width: 15%">
+            <label class="control-label" for="taskPlanFlg" style="margin-left: 15px">是否有效:</label>
+            <select id="taskPlanFlg" name="taskPlanFlg">
+                <option value="">---请选择---</option>
+                <option value="1">有效</option>
+                <option value="0">无效</option>
+            </select>
+            <label class="control-label" for="project" style="margin-left: 15px">所属项目:</label>
+            <select id="project" name="project">
+                <option value="{{ projectId }}">{{ project }}</option>
+            </select>
+            <button class="btn btn-success" type="submit" style="margin-left: 25px">查询</button>
+        </form>
+    </div>
+    <div>
+        <button class="btn btn-info" type="button" id="addTaskPlan">新增任务计划</button>
+    </div>
+</div>
+<div style="margin-top: 15px">
+    <table class="table table-striped table-hover table-bordered" style="width: 90%;margin-left: 5%" id="taskPlanList">
+        <col width="5%">
+        <col width="10%">
+        <col width="37%">
+        <col width="15%">
+        <col width="8%">
+        <col width="5%">
+        <col width="20%">
+        <thead>
+        <tr>
+            <th>编号</th>
+            <th>计划名称</th>
+            <th>包含接口</th>
+            <th>用例等级</th>
+            <th>测试环境</th>
+            <th>状态</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for task in tasks %}
+            <tr>
+                <td>{{ task.id }}</td>
+                <td>{{ task.taskPlanName }}</td>
+                <td>{{ task.taskPlanCaseApiList }}</td>
+                <td>{{ task.taskPlanCaseLevel }}</td>
+                <td>{{ task.taskPlanRun }}</td>
+                <td>{{ task.taskPlanFlg }}</td>
+                <td>
+                    <a onclick="_open('{{ task.id }}')">编辑</a>
+                    <a onclick="runTask('{{ task.id }}')">执行测试</a>
+                    <a onclick="queryLog('{{ task.id }}')">执行日志</a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    function _open(_Id) {
+        layer.open({
+            type: 2,
+            title: '编辑任务计划',
+            area: ['1000px', '650px'],
+            shadeClose: false, //点击遮罩关闭
+            content: '/caseList/{{project}}/taskDetail?id=' + _Id,
+            end: function () {
+                location.reload();
+            }
+        });
+    };
+    $('#addTaskPlan').on('click', function () {
+        layer.open({
+            type: 2,
+            title: '新增任务计划',
+            area: ['1000px', '650px'],
+            shadeClose: false, //点击遮罩关闭
+            content: '/caseList/{{project}}/taskDetail?id=0',
+            end: function () {
+                location.reload();
+            }
+        });
+    });
+
+    function runTask(taskId) {
+        $.ajax({
+            type: 'POST',
+            url: '/caseList/{{project}}/taskList/runTaskTest',
+            data: JSON.stringify({
+                id: taskId,
+                creator: ['{{ user }}']
+            }),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (json_data) {
+                $.alert({
+                    title: '消息',
+                    content: json_data.result
+                })
+            }
+        });
+    }
+
+    function queryLog(taskId) {
+        layer.open({
+            type: 2,
+            title: '执行日志',
+            area: ['1300px', '820px'],
+            shadeClose: false, //点击遮罩关闭
+            content: '/caseList/{{project}}/taskPlanRunLog?id=' + taskId,
+        });
+    }
+</script>
+</body>
+</html>

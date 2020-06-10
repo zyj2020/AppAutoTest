@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ project }}执行环境配置</title>
+    <link href="/static/css/bootstrap.css" rel="stylesheet"/>
+    <script type="text/javascript" src="/static/js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="/static/js/layer.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.easyui.min.js"></script>
+</head>
+<body>
+<div id="environment">
+    <form class="form-horizontal" method="POST" id="editEnvironment" style="margin-top: 15px;margin-left: -50px">
+        <div class="control-group">
+            <label class="control-label" for="project">项目</label>
+            <div class="controls">
+                <input type="text" name="project" id="project" placeholder="项目" required="true" readonly="readonly"
+                       value="{{ project }}"
+                       style="width:70%;">
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="localUrl">本地地址</label>
+            <div class="controls">
+                <input type="text" name="localUrl" id="localUrl" placeholder="本地地址" required="true"
+                        {% if env %}
+                       value="{{ env.localUrl }}"
+                        {% endif %}
+                       style="width:70%;">
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="testUrl">测试地址</label>
+            <div class="controls">
+                <input type="text" name="testUrl" id="testUrl" placeholder="测试地址" required="true"
+                        {% if env %}
+                       value="{{ env.testUrl }}"
+                        {% endif %}
+                       style="width:70%;">
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="releaseUrl">预发地址</label>
+            <div class="controls">
+                <input type="text" name="releaseUrl" id="releaseUrl" placeholder="预发地址" required="true"
+                        {% if env %}
+                       value="{{ env.releaseUrl }}"
+                        {% endif %}
+                       style="width:70%;">
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="productUrl">正式地址</label>
+            <div class="controls">
+                <input type="text" name="productUrl" id="productUrl" placeholder="正式地址" required="true"
+                        {% if env %}
+                       value="{{ env.productUrl }}"
+                        {% endif %}
+                       style="width:70%;">
+            </div>
+        </div>
+        <div class="control-group" align="center">
+            <button class="btn btn-info" type="button" onclick="saveEnv()">保 存</button>
+        </div>
+    </form>
+</div>
+<script>
+    function saveEnv() {
+        let localUrl = $('#localUrl').val();
+        let testUrl = $('#testUrl').val();
+        let releaseUrl = $('#releaseUrl').val();
+        let productUrl = $('#productUrl').val();
+        $.post('/caseList/{{project}}/runEnv/save', {
+                "localUrl": localUrl,
+                "testUrl": testUrl,
+                "releaseUrl": releaseUrl,
+                "productUrl": productUrl
+            },
+            function (res) {
+                if (res.code == 'ok') {
+                    let index = parent.layer.getFrameIndex(window.name);
+                    parent.layer.close(index);
+                } else {
+                    $.alert(res.code);
+                }
+            }, 'json')
+    }
+</script>
+</body>
+</html>

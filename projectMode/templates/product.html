@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>产品维护</title>
+    <script type="text/javascript" src="/static/js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="/static/js/layer.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/static/js/publicFun.js"></script>
+    <script>
+        $(function f() {
+            let productName =  getParam("productName");
+            {#let productModule =  getParam("productModule");#}
+            let productFlag =  getParam("productFlag");
+            $('#productName').val(productName);
+            {#$('#productModule').val(productModule);#}
+            $('#productFlag').val(productFlag);
+        });
+    </script>
+</head>
+<body>
+{% include "top.html" %}
+<div style="width: 90%;margin-left: 5%;margin-top: 30px">
+    <div>
+        <form class="form-inline" id="queryProduct" method="get" action="/queryProduct/">
+            <label class="control-label" for="productName">名称:</label>
+            <input id="productName" name="productName" type="text" class="input-small" placeholder="名称"
+                   style="width: 15%">
+            <label class="control-label" for="productFlag" style="margin-left: 15px">是否有效:</label>
+            <select id="productFlag" name="productFlag">
+                <option value="">---请选择---</option>
+                <option value="1">有效</option>
+                <option value="0">无效</option>
+            </select>
+{#            <label class="control-label" for="productModule" style="margin-left: 15px">所属模块</label>#}
+{#            <select id="productModule" name="productModule">#}
+{#                <option value="">---请选择---</option>#}
+{#                <option value="caseList">接口测试</option>#}
+{#                <option value="convenient">虚拟机器模拟操作</option>#}
+{#                <option value="webSocket">socket连接</option>#}
+{#            </select>#}
+            <button class="btn btn-success" type="submit" style="margin-left: 25px">查询</button>
+            <button class="btn btn-info" type="button" id="addProduct" style="margin-left: 25px">新增产品</button>
+        </form>
+    </div>
+</div>
+<div style="margin-top: 15px">
+    <table class="table table-striped table-hover table-bordered" style="width: 90%;margin-left: 5%" id="product-list">
+        <col width="10%">
+        <col width="35%">
+{#        <col width="25%">#}
+        <col width="35%">
+        <col width="10%">
+        <col width="10%">
+{#        <col width="10%">#}
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>产品名称</th>
+{#            <th>所属模块</th>#}
+            <th>产品标识</th>
+            <th>状态</th>
+            <th>编辑</th>
+{#            <th>删除</th>#}
+        </tr>
+        </thead>
+        <tbody>
+        {% for product in products %}
+            <tr>
+                <td>{{ product.id }}</td>
+                <td>{{ product.productName }}</td>
+{#                <td>{{ product.productModule }}</td>#}
+                <td>{{ product.productTag }}</td>
+                <td>{% if product.productFlag == 1 %}有效{% else %}无效{% endif %}</td>
+                <td>
+                    <a onclick="_open({{ product.id }})">编辑</a>
+                    {#                    <a class="related-widget-wrapper-link add-related" id="deleteProduct"#}
+                    {#                       href="../admin/projectMode/productmode/{{ product.id }}/change/?_to_field=id&_popup=1">编辑</a>#}
+                </td>
+{#                <td>#}
+{#                    <a class="related-widget-wrapper-link add-related" id="deleteProduct"#}
+{#                       href="../admin/projectMode/productmode/{{ product.id }}/delete/?_to_field=id&_popup=1">删除</a>#}
+{#                </td>#}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    $('#addProduct').on('click', function () {
+        layer.open({
+            type: 2,
+            title: '新增产品',
+            area: ['860px', '550px'],
+            shadeClose: false, //点击遮罩关闭
+            content: "../admin/projectMode/productmode/add/?_to_field=id&amp;_popup=1",
+            end: function () {
+                location.reload();
+            }
+        });
+    });
+
+    function _open(_Id) {
+        layer.open({
+            type: 2,
+            title: '编辑产品',
+            area: ['860px', '550px'],
+            shadeClose: false, //点击遮罩关闭
+            content: '../admin/projectMode/productmode/' + _Id + '/change/?_to_field=id&_popup=1',
+            end: function () {
+                location.reload();
+            }
+        });
+    }
+</script>
+</body>
+</html>

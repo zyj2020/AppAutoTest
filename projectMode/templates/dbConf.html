@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>数据库配置</title>
+    <link href="/static/css/bootstrap.css" rel="stylesheet"/>
+    <script type="text/javascript" src="/static/js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="/static/js/layer.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/static/js/publicFun.js"></script>
+    <script>
+        $(function f() {
+            let dbType =  getParam("dbType");
+            let flag =  getParam("dbFlag");
+            $('#dbType').val(dbType);
+            $('#dbFlag').val(flag);
+        });
+    </script>
+</head>
+<body>
+{% include "top.html" %}
+<div style="width: 90%;margin-left: 5%;margin-top: 30px">
+    <div>
+        <form class="form-inline" id="queryConf" method="get" action="/dbConf/query">
+            <label class="control-label" for="dbType" style="margin-left: 15px">数据库类型:</label>
+            <select id="dbType" name="dbType">
+                <option value="">---请选择---</option>
+                <option value="1">MySql</option>
+                <option value="2">SqlServer</option>
+                <option value="3">Oracle</option>
+                <option value="4">MongoDB</option>
+            </select>
+            <label class="control-label" for="dbFlag" style="margin-left: 15px">是否有效:</label>
+            <select id="dbFlag" name="dbFlag">
+                <option value="">---请选择---</option>
+                <option value="1">有效</option>
+                <option value="0">无效</option>
+            </select>
+            <button class="btn btn-success" type="submit" style="margin-left: 25px">查询</button>
+            <button class="btn btn-info" type="button" id="addConf" style="margin-left: 25px">新增配置</button>
+        </form>
+    </div>
+</div>
+<div style="margin-top: 15px">
+    <table class="table table-striped table-hover table-bordered" style="width: 90%;margin-left: 5%" id="confList">
+        <col width="5%">
+        <col width="15%">
+        <col width="15%">
+        <col width="20%">
+        <col width="10%">
+        <col width="15%">
+        <col width="10%">
+        <col width="10%">
+        <thead>
+        <tr>
+            <th>编号</th>
+            <th>配置名称</th>
+            <th>数据库类型</th>
+            <th>服务器</th>
+            <th>账号</th>
+            <th>默认数据库</th>
+            <th>状态</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for db in dbs %}
+            <tr>
+                <td>{{ db.id }}</td>
+                <td>{{ db.dbName }}</td>
+                <td>{{ db.dbType }}</td>
+                <td>{{ db.dbServer }}</td>
+                <td>{{ db.dbAccount }}</td>
+                <td>{{ db.dbDefault }}</td>
+                <td>{{ db.dbFlag }}</td>
+                <td>
+                    <a onclick="_open('{{ db.id }}')">编辑</a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    function _open(_Id) {
+        layer.open({
+            type: 2,
+            title: '编辑配置',
+            area: ['860px', '660px'],
+            shadeClose: false, //点击遮罩关闭
+            content: '/admin/projectMode/dbconfigmode/' + _Id + '/change/?_to_field=id&amp;_popup=1',
+            end: function () {
+                location.reload();
+            }
+        });
+    };
+    $('#addConf').on('click', function () {
+        layer.open({
+            type: 2,
+            title: '新增配置',
+            area: ['860px', '660px'],
+            shadeClose: false, //点击遮罩关闭
+            content: "/admin/projectMode/dbconfigmode/add/?_to_field=id&amp;_popup=1",
+            end: function () {
+                location.reload();
+            }
+        });
+    });
+</script>
+</body>
+</html>

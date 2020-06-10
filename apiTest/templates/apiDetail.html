@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>维护接口</title>
+    <link href="/static/css/bootstrap.css" rel="stylesheet"/>
+    <script type="text/javascript" src="/static/js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.easyui.min.js"></script>
+    <script>
+        let apiId = 0;
+        $(function () {
+            {% if apiInfo %}
+                apiId = {{ apiInfo.id }};
+                $('#groupApiId').val({{ apiInfo.groupApiId.id }});
+                $('#apiName').val('{{ apiInfo.apiName }}');
+                $('#apiDesc').val('{{ apiInfo.apiDesc }}');
+                $('#apiRequestType').val('{{ apiInfo.apiRequestType }}');
+                $('#apiHeader').val('{{ apiInfo.apiHeader }}');
+                {#$('#apiHeaderEsp').val('{{ apiInfo.apiHeaderEsp|safe }}');#}
+                $('#apiUrl').val('{{ apiInfo.apiUrl }}');
+                {#$('#apiDefaultRequest').val('{{ apiInfo.apiDefaultRequest|safe }}');#}
+                {% if apiInfo.apiFlg %}
+                    $("#apiFlg").val(1);
+                {% else %}
+                    $("#apiFlg").val(0);
+                {% endif %}
+            {% endif %}
+        })
+    </script>
+</head>
+<body>
+<div style="margin-top: 25px">
+    <form class="form-horizontal" method="POST" id="caseApiFrom">
+        <div class="control-group">
+            <label class="control-label" for="groupApiId">所属接口组</label>
+            <div class="controls">
+                <select id="groupApiId" name="groupApiId">
+                    <option value="">---请选择---</option>
+                    {% for group in groups %}
+                        <option value="{{ group.id }}">{{ group.groupName }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="apiName">接口名称</label>
+            <div class="controls">
+                <input type="text" name="apiName" id="apiName" placeholder="名称" required="true">
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="apiDesc">简介</label>
+            <div class="controls">
+                <textarea type="text" name="apiDesc" id="apiDesc" placeholder="简介" rows="2"
+                          style="width:70%;"></textarea>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="apiRequestType">请求方式</label>
+            <div class="controls">
+                <select id="apiRequestType" name="apiRequestType">
+                    <option value="POST">POST</option>
+                    <option value="GET">GET</option>
+                </select>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="apiUrl">接口地址</label>
+            <div class="controls">
+                <input type="text" name="apiUrl" id="apiUrl" placeholder="接口地址" required="true"
+                       style="width:70%;">
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="apiHeader">content-type</label>
+            <div class="controls">
+                <select id="apiHeader" name="apiHeader">
+                    <option value="application/json">application/json</option>
+                    <option value="text/json">text/json</option>
+                    <option value="application/xml">application/xml</option>
+                    <option value="text/xml">text/xml</option>
+                    <option value="application/x-www-form-urlencoded">application/x-www-form-urlencoded</option>
+                    <option value="">无</option>
+                </select>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="apiHeaderEsp">请求头参数</label>
+            <div class="controls">
+                <textarea type="text" name="apiHeaderEsp" id="apiHeaderEsp" placeholder="其他请求头信息" rows="2"
+                          style="width:70%;">{% if apiInfo %}{{ apiInfo.apiHeaderEsp|safe }}{% endif %}</textarea>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="apiDefaultRequest">默认请求参数</label>
+            <div class="controls">
+                <textarea type="text" name="apiDefaultRequest" id="apiDefaultRequest" placeholder="默认请求参数" rows="5"
+                          style="width:70%;">{% if apiInfo %}{{ apiInfo.apiDefaultRequest|safe }}{% endif %}</textarea>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="apiFlg">状态</label>
+            <div class="controls">
+                <select id="apiFlg" name="apiFlg">
+                    <option value="1">有效</option>
+                    <option value="0">无效</option>
+                </select>
+            </div>
+        </div>
+        <div class="control-group" align="center">
+            <button class="btn btn-info" onclick="submitForm()">提 交</button>
+        </div>
+    </form>
+</div>
+<script>
+    function submitForm() {
+        if ($("#apiName").val() == '' || $("#apiUrl").val() == '' || $("#groupApiId").val() == '') {
+            return false
+        }
+        $.ajax({
+            url: "/caseList/{{project}}/apiDetail/save",
+            type: 'POST',
+            data: JSON.stringify({
+                id: apiId,
+                groupApiId: $('#groupApiId').val(),
+                apiName: $('#apiName').val(),
+                apiDesc: $('#apiDesc').val(),
+                apiRequestType: $('#apiRequestType').val(),
+                apiHeader: $('#apiHeader').val(),
+                apiHeaderEsp: $('#apiHeaderEsp').val(),
+                apiUrl: $('#apiUrl').val(),
+                apiDefaultRequest: $('#apiDefaultRequest').val(),
+                apiFlg: $('#apiFlg').val()
+            }),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+                alert(data['code']);
+                let index = parent.layer.getFrameIndex(window.name);
+                parent.layer.close(index);
+            }
+        });
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="/static/css/bootstrap.css" rel="stylesheet"/>
+    <link href="/static/css/pickList.css" rel="stylesheet"/>
+    <link href="/static/css/select2.css" rel="stylesheet"/>
+    <script type="text/javascript" src="/static/js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/static/js/pickList.js"></script>
+    <script type="text/javascript" src="/static/js/bootstrap.js"></script>
+    <script type="text/javascript" src="/static/js/select2.js"></script>
+    <style>
+        .pickRow {
+            margin-left: 5%;
+            width: 90%
+        }
+
+        .col-sm-5 {
+            width: 40%;
+            float: left
+        }
+
+        .col-sm-2 {
+            width: 20%;
+            float: left
+        }
+
+        .col-sm-4 {
+            width: 40%;
+            display: inline-block
+        }
+    </style>
+    <script>
+        $(function () {
+            $("#taskPlanName").val('{{ taskPlanInfo.taskPlanName}}');
+            $("#taskPlanRun").val({{ taskPlanInfo.taskPlanRun}});
+            $("#taskPlanIteration").val({{ taskPlanInfo.taskPlanIteration}});
+            let level;
+            {% if taskPlanInfo %}
+                level = '{{ taskPlanInfo.taskPlanCaseLevel}}';
+                let levels = level.split(",");
+                $("#taskPlanCaseLevel").val(levels).trigger('change');
+                {% if taskPlanInfo.taskPlanFlg == True %}
+                    $("#taskPlanFlg").val(1);
+                {% else %}
+                    $("#taskPlanFlg").val(0);
+                {% endif %}
+            {% endif %}
+        });
+        let taskA;
+        {% if taskPlanInfo %}
+            taskA = '{{taskPlanInfo.taskPlanCaseApiList}}';
+        {% endif %}
+        let taskApi = (taskA == undefined ? '' : taskA).split(",");
+        let val = [];
+        let pick;
+        $.post("/caseList/{{ project }}/taskDetail/queryApi", '', function (res) {
+            for (let i = 0; i < res.length; i++) {
+                val.push({
+                    'id': res[i].id,
+                    'text': res[i].apiName + '(' + res[i].apiDesc + ')',
+                    'isSel': $.inArray(res[i].id.toString(), taskApi) == -1 ? 0 : 1
+                });
+            }
+            pick = $("#pickList").pickList({
+                data: val
+            });
+        }, 'json');
+    </script>
+</head>
+<body>
+<div style="margin-top: 25px">
+    <form class="form-horizontal" method="POST" id="taskPlanFrom">
+        <div class="control-group">
+            <label class="control-label" for="taskPlanName">计划名称</label>
+            <div class="controls">
+                <input type="text" name="taskPlanName" id="taskPlanName" placeholder="计划名称" required="true">
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="pickList">接口列表</label>
+        </div>
+        <div class="control-group">
+            <div id="pickList" name="pickList"></div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="taskPlanRun">测试环境</label>
+            <div class="controls">
+                <select id="taskPlanRun" name="taskPlanRun">
+                    <option value="2">测试地址</option>
+                    <option value="1">本地地址</option>
+                    <option value="3">预发地址</option>
+                    <option value="4">正式地址</option>
+                </select>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="taskPlanCaseLevel">用例等级</label>
+            <div class="controls">
+                <select id="taskPlanCaseLevel" name="taskPlanCaseLevel" class="form-control" multiple="multiple">
+                    <option value="3">核心用例</option>
+                    <option value="2">一般用例</option>
+                    <option value="1">次要用例</option>
+                </select>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="taskPlanIteration">迭代次数</label>
+            <div class="controls">
+                <input type="text" name="taskPlanIteration" id="taskPlanIteration" placeholder="迭代次数" required="true">
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="taskPlanFlg">状态</label>
+            <div class="controls">
+                <select id="taskPlanFlg" name="taskPlanFlg">
+                    <option value="1">有效</option>
+                    <option value="0">无效</option>
+                </select>
+            </div>
+        </div>
+        <div class="control-group" align="center">
+            <button class="btn btn-info" type="button" onclick="submitForm()">提 交</button>
+        </div>
+    </form>
+</div>
+<script>
+
+    $('#taskPlanCaseLevel').select2({
+        tags: true,
+        maximumSelectionLength: 3
+    });
+    $("#taskPlanName").popover({
+        placement: 'right',
+        content: "不可为空",
+        trigger: 'hover',
+        html: true
+    });
+
+    function submitForm() {
+        if ($("#taskPlanName").val() == '' || $("#taskPlanCaseLevel").val() == null) {
+            return false
+        }
+        let iteration = parseInt($("#taskPlanIteration").val());
+        if (isNaN(iteration) || iteration <= 0) {
+            iteration = 1
+        }
+        let apiList = pick.getValues();
+        let aList = '';
+        for (let i = 0; i < apiList.length; i++) {
+            if (i == apiList.length - 1) {
+                aList += apiList[i]['id']
+            } else {
+                aList += apiList[i]['id'] + ','
+            }
+        }
+        $.ajax({
+            url: "/caseList/{{project}}/taskDetail/save",
+            type: 'POST',
+            data: JSON.stringify({
+                id: {{ task_id }},
+                taskPlanCaseApiList: aList,
+                taskPlanRun: $("#taskPlanRun").val(),
+                taskPlanCaseLevel: $("#taskPlanCaseLevel").val().join(","),
+                taskPlanFlg: ($("#taskPlanFlg").val() == 1) ? true : false,
+                taskPlanName: $("#taskPlanName").val(),
+                taskPlanIteration: iteration,
+                creator: '{{ user }}'
+            }),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+                alert(data['code']);
+                var index = parent.layer.getFrameIndex(window.name);
+                parent.layer.close(index);
+            }
+        });
+//        $('#taskPlanFrom').form({
+//            url:"/caseList/{{project}}/saveTaskPlan/0",
+//            onSubmit:function () {
+//                var apiList = pick.getValues();
+//                alert(apiList);
+//
+//            },
+//            success:function (data) {
+//                alert(JSON.parse(data)['code']);
+//                var index = parent.layer.getFrameIndex(window.name);
+//                parent.layer.close(index);
+//            }
+//        });
+    };
+
+</script>
+</body>
+</html>

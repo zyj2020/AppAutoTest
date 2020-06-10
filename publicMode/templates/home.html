@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>测试平台</title>
+    <style>
+        #welcome {
+            width: 90%;
+            margin-left: 10%;
+            margin-top: 30px
+        }
+
+        .ch {
+            display: inline-block; /*或者：display:inline;*/
+            width: 30%;
+        }
+    </style>
+</head>
+<body>
+{% include "top.html" %}
+<div id="welcome">
+    <div id="left" class="ch">
+        <div>
+            <h3>接口测试教程：</h3>
+        </div>
+        <div>
+            <div class="clear"></div>
+            <label>—执行环境配置（运行用例时，获取指定环境的url，组合成接口的实际地址）</label>
+            <div class="clear"></div>
+            <label>—接口组维护 可以认为是项目下面的controller名称，自由分组，便于管理</label>
+            <div class="clear"></div>
+            <label>—接口维护 controller下面的action;<br>
+                默认参数为请求参数的类型，用于接口的基础性测试（举例：{"id":"int", "name": "string"};<br>
+                目前支持的类型有：int,string,bool,time,decimal以及由这些基础类型组成的list,dict</label>
+            <div class="clear"></div>
+            <label>—用例维护 响应断言分2种模式，文本断言和json断言；<br>
+                1：文本断言 包括和匹配时正则比较，substring和equals 是纯文本比较；<br>
+                2：json断言，判断返回json字符串的指定字段的值，可添加多个（key值变化时，自动添加一行），key格式示例（Body.OrderList[1].id 表示
+                body下面的第二个orderList的ID字段）</label>
+            <label>—支付单用例执行，批量测试，将用例添加到一个计划中，直接执行该测试计划（可用于jenkins进行持续集成）</label>
+            <div class="clear"></div>
+            <label>—变量支持：请求头，请求参数，断言数据都可以添加变量 格式${变量名}，sql变量${sql_sql名称}<br>
+                        ps：优先选择接口变量，接口变量不存在，取项目的全局变量
+            </label>
+            <div class="clear"></div>
+        </div>
+    </div>
+    <!-- <div id="mid" class="ch">
+        <div>
+            <h3>说明</h3>
+        </div>
+    </div> -->
+    <div id="right" class="ch">
+    </div>
+</div>
+</body>
+</html>

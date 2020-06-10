@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ project }}-接口维护</title>
+    <link href="/static/css/bootstrap.css" rel="stylesheet"/>
+    <link href="/static/css/jquery-confirm.css" rel="stylesheet">
+    <script type="text/javascript" src="/static/js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="/static/js/bootstrap-confirm.js"></script>
+    <script type="text/javascript" src="/static/js/layer.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/static/js/publicFun.js"></script>
+    <script>
+        $(function f() {
+            let groupId = getParam("apiGroup");
+            let name = getParam("apiName");
+            let flag = getParam("apiFlg");
+            $('#apiGroup').val(groupId);
+            $('#apiName').val(name);
+            $('#apiFlg').val(flag);
+        });
+    </script>
+</head>
+<body>
+{% include "top.html" %}
+{% include "header.html" %}
+<div style="width: 90%;margin-left: 5%;margin-top: 30px">
+    <div>
+        <form class="form-inline" id="queryAPI" method="get" action="/caseList/{{ project }}/apiList/query">
+            <label class="control-label" for="apiName">接口名称:</label>
+            <input id="apiName" name="apiName" type="text" class="input-small" placeholder="名称" style="width: 15%">
+            <label class="control-label" for="apiFlg" style="margin-left: 15px">是否有效:</label>
+            <select id="apiFlg" name="apiFlg">
+                <option value="">---请选择---</option>
+                <option value="1">有效</option>
+                <option value="0">无效</option>
+            </select>
+            <label class="control-label" for="apiGroup" style="margin-left: 15px">所属接口组:</label>
+            <select id="apiGroup" name="apiGroup">
+                <option value="">---请选择---</option>
+                {% for group in groups %}
+                    <option value="{{ group.id }}">{{ group.groupName }}</option>
+                {% endfor %}
+            </select>
+            <label class="control-label" for="project" style="margin-left: 15px">所属项目:</label>
+            <select id="project" name="project">
+                <option value="{{ projectId }}">{{ project }}</option>
+            </select>
+            <button class="btn btn-success" type="submit" style="margin-left: 25px">查询</button>
+            <button class="btn btn-info" type="button" id="addAPI" style="margin-left: 25px">新增接口</button>
+            <a class="ope_btn" href="/caseList/{{ project }}/groupApiList"
+               style="margin-left: 15px">接口组维护</a>
+        </form>
+    </div>
+</div>
+<div style="margin-top: 15px">
+    <table class="table table-striped table-hover table-bordered" style="width: 90%;margin-left: 5%" id="case-API-list">
+        <col width="4%">
+        <col width="10%">
+        <col width="14%">
+        <col width="10%">
+        <col width="25%">
+        <col width="8%">
+        <col width="8%">
+        <col width="21%">
+        <thead>
+        <tr>
+            <th>编号</th>
+            <th>接口名称</th>
+            <th>接口简介</th>
+            <th>所属接口组</th>
+            <th>接口地址</th>
+            <th>请求类型</th>
+            <th>是否有效</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for api in apis %}
+            <tr>
+                <td>{{ api.id }}</td>
+                <td>{{ api.apiName }}</td>
+                <td>{{ api.apiDesc }}</td>
+                <td>{{ api.groupApiId }}</td>
+                <td>{{ api.apiUrl }}</td>
+                <td>{{ api.apiRequestType }}</td>
+                <td>{{ api.apiFlg }}</td>
+                <td>
+                    <a onclick="_open('{{ api.id }}')">编辑</a>
+                    <a onclick="runBaseTest('{{ api.id }}')" style="margin-left: 10px">基础测试</a>
+                    <a onclick="queryLog('{{ api.id }}')" style="margin-left: 10px">日志</a>
+                    <a onclick="sqlList('{{ api.id }}')" style="margin-left: 10px">sql列表</a>
+                    <a onclick="userVar('{{ api.id }}')" style="margin-left: 10px">接口变量</a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    function _open(_Id) {
+        layer.open({
+            type: 2,
+            title: '编辑接口',
+            area: ['800px', '760px'],
+            shadeClose: false, //点击遮罩关闭
+            content: '/caseList/{{ project }}/apiDetail?id=' + _Id,
+            end: function () {
+//            location.reload();
+            }
+        });
+    }
+
+    $('#addAPI').on('click', function () {
+        layer.open({
+            type: 2,
+            title: '新增接口',
+            area: ['800px', '760px'],
+            shadeClose: false, //点击遮罩关闭
+            content: '/caseList/{{ project }}/apiDetail?id=0',
+            end: function () {
+//            location.reload();
+            }
+        });
+    });
+
+    function sqlList(_Id) {
+        layer.open({
+            type: 2,
+            title: 'sql列表',
+            area: ['1480px', '800px'],
+            shadeClose: false, //点击遮罩关闭
+            content: '/caseList/{{ project }}/sqlList?apiId=' + _Id,
+            end: function () {
+//            location.reload();
+            }
+        });
+    }
+
+    function queryLog(apiId) {
+        layer.open({
+            type: 2,
+            title: '执行日志',
+            area: ['1350px', '750px'],
+            shadeClose: false, //点击遮罩关闭
+            content: '/caseList/{{ project }}/runLog?logType=1&apiId=' + apiId,
+        });
+    }
+
+    function runBaseTest(apiId) {
+        $.ajax({
+            type: 'POST',
+            url: '/caseList/{{project}}/apiList/runBaseTest',
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({
+                id: apiId
+            }),
+            success: function (json_data) {
+                $.alert({
+                    title: '消息',
+                    content: json_data['result']
+                })
+            }
+        });
+    }
+
+    function userVar(id) {
+        layer.open({
+            type: 2,
+            title: '接口变量配置',
+            area: ['1480px', '800px'],
+            shadeClose: false, //点击遮罩关闭
+            content: "/caseList/{{ project }}/userVar?varType=1&sId=0&apiId=" + id,
+            end: function () {
+                {#location.reload();#}
+            }
+        });
+    }
+</script>
+</body>
+</html>

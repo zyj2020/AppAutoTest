@@ -1,0 +1,23 @@
+<link href="/static/css/header.css" rel="stylesheet"/>
+<div class="header">
+    <div class="menu">
+        <ul>
+            {% for product in products %}
+                <li class="li_line"></li>
+                <li>
+                    <a href="javascript:void(0);">{{ product.productName }}</a>
+                    <ul>
+                        {% for project in projects %}
+                            {% if  project.productId.id == product.id %}
+                                <li>
+                                    <a href="/{{ project.module }}/{{ project.projectTag }}">{{ project.projectName }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </li>
+            {% endfor %}
+            <li class="li_line"></li>
+        </ul>
+    </div>
+</div>

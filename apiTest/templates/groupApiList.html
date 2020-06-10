@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ project }}-接口组维护</title>
+    <link href="/static/css/bootstrap.css" rel="stylesheet"/>
+    <script type="text/javascript" src="/static/js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="/static/js/layer.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/static/js/publicFun.js"></script>
+    <script>
+        $(function f() {
+            let groupName = getParam("groupName");
+            let flag = getParam("groupFlg");
+            $('#groupName').val(groupName);
+            $('#groupFlg').val(flag);
+        });
+    </script>
+</head>
+<body>
+{% include "top.html" %}
+{% include "header.html" %}
+<div style="width: 90%;margin-left: 5%;margin-top: 30px">
+    <div>
+        <form class="form-inline" id="queryGroupApi" method="get" action="/caseList/{{ project }}/groupApiList/query">
+            <label class="control-label" for="groupName">名称:</label>
+            <input id="groupName" name="groupName" type="text" class="input-small" placeholder="名称" style="width: 15%">
+            <label class="control-label" for="groupFlg" style="margin-left: 15px">是否有效:</label>
+            <select id="groupFlg" name="groupFlg">
+                <option value="">---请选择---</option>
+                <option value="1">有效</option>
+                <option value="0">无效</option>
+            </select>
+            <label class="control-label" for="project" style="margin-left: 15px">所属项目:</label>
+            <select id="project" name="project">
+                <option value="{{ projectId }}">{{ project }}</option>
+            </select>
+            <button class="btn btn-success" type="submit" style="margin-left: 25px">查询</button>
+            <button class="btn btn-info" type="button" id="addGroupApi" style="margin-left: 25px">新增接口组</button>
+            <a class="ope_btn" href="/caseList/{{ project }}/apiList" style="margin-left: 15px">接口维护</a>
+        </form>
+    </div>
+</div>
+<div style="margin-top: 15px">
+    <table class="table table-striped table-hover table-bordered" style="width: 90%;margin-left: 5%"
+           id="case-group-list">
+        <col width="10%">
+        <col width="20%">
+        <col width="30%">
+        <col width="20%">
+        <col width="10%">
+        <col width="10%">
+        <thead>
+        <tr>
+            <th>编号</th>
+            <th>名称</th>
+            <th>简介</th>
+            <th>所属项目</th>
+            <th>是否有效</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for group in groups %}
+            <tr>
+                <td>{{ group.id }}</td>
+                <td>{{ group.groupName }}</td>
+                <td>{{ group.groupDesc }}</td>
+                <td>{{ group.projectId }}</td>
+                <td>{{ group.groupFlg }}</td>
+                <td>
+                    <a onclick="_open('{{ group.id }}')">编辑</a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    function _open(_Id) {
+        layer.open({
+            type: 2,
+            title: '编辑接口组',
+            area: ['860px', '560px'],
+            shadeClose: false, //点击遮罩关闭
+            content: '/admin/apiTest/groupapimode/' + _Id + '/change/?_to_field=id&_popup=1&projectId=' + {{ projectId }},
+            end: function () {
+                location.reload();
+            }
+        });
+    };
+    $('#addGroupApi').on('click', function () {
+        layer.open({
+            type: 2,
+            title: '新增接口组',
+            area: ['860px', '560px'],
+            shadeClose: false, //点击遮罩关闭
+            content: '/admin/apiTest/groupapimode/add/?_to_field=id&amp;_popup=1&projectId=' + {{ projectId }},
+            end: function () {
+                location.reload();
+            }
+        });
+    });
+</script>
+</body>
+</html>

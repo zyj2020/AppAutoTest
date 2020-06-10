@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ project }}-sql查询列表</title>
+    <link href="/static/css/bootstrap.css" rel="stylesheet"/>
+    <style>
+        .wrap {
+            width: 500px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+    </style>
+    <script type="text/javascript" src="/static/js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="/static/js/layer.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/static/js/publicFun.js"></script>
+    <script>
+        $(function f() {
+            let apiSqlFlg = getParam("apiSqlFlg");
+            $('#apiSqlFlg').val(apiSqlFlg);
+        });
+    </script>
+</head>
+<body>
+<div style="width: 90%;margin-left: 5%;margin-top: 30px">
+    <div>
+        <form class="form-inline" method="POST" id="apiSqlQuery">
+            <label class="control-label" for="apiSqlFlg" style="margin-left: 15px">是否有效:</label>
+            <select id="apiSqlFlg" name="apiSqlFlg">
+                <option value="">---请选择---</option>
+                <option value="1">有效</option>
+                <option value="0">无效</option>
+            </select>
+            <label class="control-label" for="api" style="margin-left: 15px">接口:</label>
+            <select id="api" name="api">
+                <option value="{{ apiInfo.id }}">{{ apiInfo.apiName }}</option>
+            </select>
+            <button class="btn btn-success" type="submit" style="margin-left: 25px">查询</button>
+        </form>
+    </div>
+    <div>
+        <button class="btn btn-info" type="button" id="addSql">新增sql查询</button>
+    </div>
+</div>
+<div style="margin-top: 15px">
+    <table class="table table-striped table-hover table-bordered" style="width: 90%;margin-left: 5%" id="sqlList">
+        <col width="5%">
+        <col width="15%">
+        <col width="50%">
+        <col width="15%">
+        <col width="5%">
+        <col width="10%">
+        <thead>
+        <tr>
+            <th>编号</th>
+            <th>SQL名称</th>
+            <th>SQL语句</th>
+            <th>db配置</th>
+            <th>状态</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for sql in sqlList %}
+            <tr>
+                <td>{{ sql.id }}</td>
+                <td>{{ sql.apiSqlName }}</td>
+                <td>
+                    <div class="wrap" title="{{ sql.apiSqlNameInfo }}">{{ sql.apiSqlNameInfo }}</div>
+                </td>
+                <td>{{ sql.dbConfId }}</td>
+                <td>{{ sql.apiSqlFlg }}</td>
+                <td>
+                    <a onclick="_open('{{ sql.id }}')">编辑</a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    function _open(_Id) {
+        layer.open({
+            type: 2,
+            title: '编辑配置',
+            area: ['860px', '660px'],
+            shadeClose: false, //点击遮罩关闭
+            content: '/admin/apiTest/apisqllistmode/' + _Id + '/change/?_to_field=id&_popup=1&projectId=' + {{ projectId }}+"&apiId=" + {{ apiInfo.id }},
+            end: function () {
+                {#location.reload();#}
+            }
+        });
+    };
+    $('#addSql').on('click', function () {
+        layer.open({
+            type: 2,
+            title: '新增配置',
+            area: ['860px', '660px'],
+            shadeClose: false, //点击遮罩关闭
+            content: "/admin/apiTest/apisqllistmode/add/?_to_field=id&amp;_popup=1&projectId=" + {{ projectId }}+"&apiId=" + {{ apiInfo.id }},
+            end: function () {
+                {#location.reload();#}
+            }
+        });
+    });
+    $('#apiSqlQuery').form({
+        url: '/caseList/{{project}}/sqlList/query',
+        success: function (result) {
+            let res = JSON.parse(result);
+            if (res['code'] == "ok") {
+                let sqlList = res['sqlList'];
+                let newTr = "";
+                for (let i = 0; i < sqlList.length; i++) {
+                    newTr += "<tr>" +
+                        "<td>" + sqlList[i].id + "</td>" +
+                        "<td>" + sqlList[i].apiSqlName + "</td>" +
+                        "<td>" + sqlList[i].apiSqlNameInfo + "</td>" +
+                        "<td>" + sqlList[i].dbConfId + "</td>" +
+                        "<td>" + sqlList[i].apiSqlFlg + "</td>" +
+                        "<td>" +
+                        "<a onclick=\"_open('" + sqlList[i].id + "' )\">编辑</a>" +
+                        "</td>" +
+                        "</tr>"
+                }
+                $("#sqlList tr:not(:first)").html("");
+                $("#sqlList").append(newTr);
+            } else {
+                $.alert(res['code'])
+            }
+        }
+    });
+</script>
+</body>
+</html>

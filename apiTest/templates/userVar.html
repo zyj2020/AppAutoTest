@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="/static/css/bootstrap.css" rel="stylesheet"/>
+    <style>
+        .wrap {
+            width: 300px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+    </style>
+    <script type="text/javascript" src="/static/js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="/static/js/layer.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/static/js/publicFun.js"></script>
+    <script>
+        let varType;
+        let apiId;
+        let sId;
+        $(function f() {
+            varType = getParam("varType");
+            apiId = getParam("apiId");
+            sId = getParam("sId");
+            $('#varType').val(varType);
+        });
+    </script>
+</head>
+<body>
+<div style="width: 90%;margin-left: 5%;margin-top: 30px">
+    <div>
+        <form class="form-inline" method="POST" id="userVarQuery">
+            <label class="control-label" for="varName">变量名称:</label>
+            <input id="varName" name="varName" type="text" class="input-small" placeholder="变量名称"
+                   style="width: 15%">
+            <label class="control-label" for="varFlag" style="margin-left: 15px">是否有效:</label>
+            <select id="varFlag" name="varFlag">
+                <option value="">---请选择---</option>
+                <option value="1">有效</option>
+                <option value="0">无效</option>
+            </select>
+            <label class="control-label" for="varType" style="margin-left: 15px">变量类型:</label>
+            <select id="varType" name="varType" readonly="readonly" onfocus="this.defaultIndex=this.selectedIndex;"
+                    onchange="this.selectedIndex=this.defaultIndex;">
+                <option value="0">全局变量</option>
+                <option value="1">接口变量</option>
+                <option value="2">场景变量</option>
+            </select>
+            {% if apiInfo %}
+                <label class="control-label" for="api" style="margin-left: 15px">接口:</label>
+                <select id="api" name="api" readonly="readonly">
+                    <option value="{{ apiInfo.id }}">{{ apiInfo.apiName }}</option>
+                </select>
+            {% endif %}
+            {% if scenarioInfo %}
+                <label class="control-label" for="scenario" style="margin-left: 15px">场景:</label>
+                <select id="scenario" name="scenario" readonly="readonly">
+                    <option value="{{ scenarioInfo.id }}">{{ scenarioInfo.sName }}</option>
+                </select>
+            {% endif %}
+            <button class="btn btn-success" type="submit" style="margin-left: 25px">查询</button>
+        </form>
+    </div>
+    <div>
+        <button class="btn btn-info" type="button" id="addVar">新增变量</button>
+    </div>
+</div>
+<div style="margin-top: 15px">
+    <table class="table table-striped table-hover table-bordered" style="width: 90%;margin-left: 5%" id="varList">
+        <col width="10%">
+        <col width="25%">
+        <col width="25%">
+        <col width="20%">
+        <col width="10%">
+        <col width="10%">
+        <thead>
+        <tr>
+            <th>编号</th>
+            <th>变量名称</th>
+            <th>变量值</th>
+            <th>说明</th>
+            <th>状态</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for var in varList %}
+            <tr>
+                <td>{{ var.id }}</td>
+                <td>{{ var.varName }}</td>
+                <td>
+                    <div class="wrap" title="{{ var.varValue }}">{{ var.varValue }}</div>
+                </td>
+                <td>{{ var.varDesc }}</td>
+                <td>{{ var.varFlag }}</td>
+                <td>
+                    <a onclick="_open('{{ var.id }}')">编辑</a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    function _open(_Id) {
+        layer.open({
+            type: 2,
+            title: '编辑变量',
+            area: ['860px', '660px'],
+            shadeClose: false, //点击遮罩关闭
+            content: '/admin/apiTest/uservarmode/' + _Id + '/change/?_to_field=id&_popup=1&varType=' + varType + "&apiId=" + apiId + "&projectId=" + {{ projectId }} +"&sId=" + sId,
+            end: function () {
+                {#location.reload();#}
+            }
+        });
+    };
+    $('#addVar').on('click', function () {
+        layer.open({
+            type: 2,
+            title: '新增变量',
+            area: ['860px', '660px'],
+            shadeClose: false, //点击遮罩关闭
+            content: "/admin/apiTest/uservarmode/add/?_to_field=id&amp;_popup=1&varType=" + varType + "&apiId=" + apiId + "&projectId=" + {{ projectId }} +"&sId=" + sId,
+            end: function () {
+                {#location.reload();#}
+            }
+        });
+    });
+    $('#userVarQuery').form({
+        url: '/caseList/{{project}}/userVar/query',
+        success: function (result) {
+            let res = JSON.parse(result);
+            if (res.code == "ok") {
+                let varList = res['varList'];
+                let newTr = "";
+                for (let i = 0; i < varList.length; i++) {
+                    newTr += "<tr>" +
+                        "<td>" + varList[i].id + "</td>" +
+                        "<td>" + varList[i].varName + "</td>" +
+                        "<td><div class=\"wrap\" title=\"" + varList[i].varValue + "\">" + varList[i].varValue + "</div></td> " +
+                        "<td>" + varList[i].varDesc + "</td>" +
+                        "<td>" + varList[i].varFlag + "</td>" +
+                        "<td>" +
+                        "<a onclick=\"_open('" + varList[i].id + "' )\">编辑</a>" +
+                        "</td>" +
+                        "</tr>"
+                }
+                $("#varList tr:not(:first)").html("");
+                $("#varList").append(newTr);
+            } else {
+                $.alert(res.code)
+            }
+        }
+    });
+</script>
+</body>
+</html>
